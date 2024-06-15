@@ -1,0 +1,121 @@
+{% extends 'index/layout.html' %}
+{% load static %}
+{% block script %}
+<script src = "{% static 'index/index.js' %}" defer></script>
+<script src="{% static 'lib/cookie.min.js' %}" defer></script>
+{% endblock %}
+{% load static %}
+{% block body %}
+<div class="container-fluid">
+    <div class="topnav nav-effect">
+        <div class="nav-padding">
+            <span class="nav-ham" id="nav-ham">&#9776;</span>
+            <img src = "{% static 'Icon/icon.png' %}" alt = "Google Forms Icon(CLONE)" class="navbar-icon form-icon" title = "Forms">
+            <span class="nav-text" title = "Forms"><a href = "{% url 'index' %}" class="nav-link">Events Project</a></span>
+            {% comment %} <a href="{% url 'logout' %}">
+                <img src = "{% static 'Icon/Logout.jpg' %}" alt = "Logout Icon" class="navbar-icon float-right logout-icon" title = "Logout">
+            </a> {% endcomment %}
+        </div>
+    </div>
+    <ul class="event-list">
+        <li class"list-nav"><a href = "{% url 'index' %}">Home</a></li>
+        {% if admin %}
+        <li class"list-nav"><a href = "{% url 'dashboard' %}">Dashboard</a></li>
+        {% endif %}
+        <li class="dropdown">
+          <img src = "{% static 'Icon/user.png' %}" alt = "Logout Icon" class="navbar-icon logout-icon" title = "Logout">
+          <a href="javascript:void(0)" class="dropbtn">{{auth}}</a>
+          <div class="dropdown-content">
+
+            <a href="{% url 'logout' %}">Logout</a>
+            {% comment %} <a href="#">Link 2</a>
+            <a href="#">Link 3</a> {% endcomment %}
+          </div>
+        </li>
+      </ul>
+    <div class="sidebar" id = "sidebar">
+        <span class="close-sidebar" id="close-sidebar">&times;</span>
+        <div class="sidebar-content">
+            <h4 class="sidebar-title">
+                <a href = "{% url 'index' %}" class="sidebar-title-link">
+                    <span>Events Project</span>
+                </a>
+            </h4>
+            <p class="text-label">This is the final Year Project </p>
+            {% comment %} <p class="text-label"> <a href="https://github.com/kimlimjustin/google-form-clone/blob/master/LICENSE" class="link">MIT</a></p>
+            <p class="text-label">Source code: <a href="https://github.com/kimlimjustin/google-form-clone">
+                <img src = "{% static 'Icon/github.png' %}" class="github-icon" alt="GitHub"></a></p>
+            <p class="text-label">Support creator by <a href="https://github.com/kimlimjustin/google-form-clone" class="link">give a star on GitHub</a></p> {% endcomment %}
+        </div>
+    </div>
+
+  
+    <div class="container">
+        <div class="form-list">
+            <div class="row align-items-stretch">
+            <div class="c-dashboardInfo col-lg-6 col-md-6">
+                <div class="wrap">
+                <h4 class="heading heading5 hind-font medium-font-weight c-dashboardInfo__title">Total User<svg
+                    class="MuiSvgIcon-root-19" focusable="false" viewBox="0 0 24 24" aria-hidden="true" role="presentation">
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z">
+                    </path>
+                    </svg></h4><span class="hind-font caption-12 c-dashboardInfo__count">{{total_user}}</span>
+                </div>
+            </div>
+            <div class="c-dashboardInfo col-lg-6 col-md-6">
+                <div class="wrap">
+                <h4 class="heading heading5 hind-font medium-font-weight c-dashboardInfo__title">Total Events<svg
+                    class="MuiSvgIcon-root-19" focusable="false" viewBox="0 0 24 24" aria-hidden="true" role="presentation">
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z">
+                    </path>
+                    </svg></h4><span class="hind-font caption-12 c-dashboardInfo__count">{{total_forms}}</span>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        {% comment %} <h1>A Fancy Table</h1> {% endcomment %}
+        <table id="customers">
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+        </tr>
+        {% for i in user %}
+        <tr>
+            <td>{{ i.username }}</td>
+            <td>{{i.email}}</td>
+        </tr>
+        {% endfor %}
+        </table>
+    </div>
+
+    <div class="container">
+        {% comment %} <h1>A Fancy Table</h1> {% endcomment %}
+        <hr style="margin-top:40px">
+        <table id="customers">
+        <h4>List of Events</h4> 
+       
+        <tr>
+            <th>Title</th>
+            {% comment %} <th>Description</th> {% endcomment %}
+            <th>Creator</th>
+            <th>Created Date</th>
+        </tr>
+        
+        {% for i in forms %}
+        <tr>
+            <td>{{i.title}}</td>
+            {% comment %} <td>{{i.description}}</td> {% endcomment %}
+            <td>{{i.creator}}</td>
+            <td>{{i.createdAt}}</td>
+        </tr>
+        {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}

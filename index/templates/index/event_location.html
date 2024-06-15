@@ -1,0 +1,98 @@
+{% extends 'index/layout.html' %}
+{% load static %}
+{% load get_property %}
+{% load generate_color %}
+{% load count %}
+{% block title %}{{form.title}}'s response ~ Google Forms CLONE{% endblock %}
+{% block script %}
+<script src="{% static 'index/responses.js' %}" defer></script>
+<script src="{% static 'lib/cookie.min.js' %}"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAro40_z2tGtXFU4RZM4c2-DJd4Xf_6zIg&libraries=places&callback=initMap" async defer></script>
+<script>
+    function initMap() {
+        var input = document.getElementById('searchTextField');
+        var autocomplete = new google.maps.places.Autocomplete(input);
+
+        autocomplete.addListener('place_changed', function() {
+            var place = autocomplete.getPlace();
+            if (!place.geometry) {
+                return;
+            }
+
+            // Get latitude and longitude
+            var lat = place.geometry.location.lat();
+            var lng = place.geometry.location.lng();
+            console.log(lat);
+            console.log(lng);
+
+            // Update hidden fields with coordinates
+            document.getElementById('cityLat').value = lat;
+            document.getElementById('cityLng').value = lng;
+        });
+    }
+</script>
+{% endblock %}
+{% block body %}
+<div class="container-fluid">
+    <div class="form-topnav">
+        <a href="/">
+            <img src="{% static 'Icon/icon.png' %}" alt="Google Forms Icon(CLONE)" class="navbar-icon form-icon" title="Forms" />
+        </a>
+        <span class="nav-text nav-form-title input-form-title">{{form.title}}</span>
+        <div class="float-right">
+            <img src="{% static 'Icon/theme.png' %}" alt="Theme icon" id="customize-theme-btn" title="Customize theme" class="nav-form-menu-icon" />
+            <a href="{% url 'view_form' form.code %}">
+                <img src="{% static 'Icon/eye.png' %}" alt="Preview icon" title="Preview" class="nav-form-menu-icon big-screen" />
+            </a>
+            <img src="{% static 'Icon/send.png' %}" alt="Send icon" title="Send" class="nav-form-menu-icon small-screen" id="send-form-btn" />
+            <img src="{% static 'Icon/setting.png' %}" alt="Setting icon" title="Setting" class="nav-form-menu-icon open-setting" />
+            <button type="button" id="send-message">Send</button>
+        </div>
+    </div>
+    <div class="form-topnav">
+        <div class="form-navigation center">
+            {% if form.is_quiz %}
+            <span class="col-3 navigation active"><a href = "{% url 'event_location' form.code %}" class="link">Event Location</a></span>
+            <span class="col-3 navigation"><a href = "{% url 'edit_form' form.code %}" class="link">Questions</a></span>
+            <span class="col-2 navigation score"><a href = "{% url 'score' form.code %}" class="link">Scores</a></span>
+            <span class="col-2 navigation"><a href = "{% url 'responses' form.code %}" class="link">Responses</a></span>
+            <span class="col-2 navigation "><a href = "{% url 'phone' form.code %}" class="link">Phone number</a></span>
+            {% else %}
+            <span class="col-3 navigation active"><a href = "{% url 'event_location' form.code %}" class="link">Event Location</a></span>
+            <span class="col-3 navigation"><a href = "{% url 'edit_form' form.code %}" class="link">Questions</a></span>
+            <span class="col-3 navigation"><a href = "{% url 'responses' form.code %}" class="link">Responses</a></span>
+            <span class="col-3 navigation "><a href = "{% url 'phone' form.code %}" class="link">Phone number</a></span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="container">
+        <span id="bg-color" style="display: none;">{{form.background_color}}</span>
+        <span id="text-color" style="display: none;">{{form.text_color}}</span>
+        
+        <div class="margin-top-bottom box question-box" id="update-location">
+            <h3>Add/Update Event Location</h3>
+            <hr>
+            <form method="post">
+                {% csrf_token %}
+                <input type="text" id="searchTextField" name="event_location" placeholder="Search & save event location area." required>
+                <input type="hidden" id="cityLat" name="event_lat">
+                <input type="hidden" id="cityLng" name="event_lng">
+                <button class="btn-submit" type="submit">save</button>
+            </form>
+            <ul></ul>
+        </div>
+
+        <div class="margin-top-bottom box question-box" id="show-location">
+            <h3>Event Location</h3>
+            <hr>
+            <ul>
+                {% if event_location.event_latitude %}
+                <li><span>{{ event_location.event_location_name }}</span></li>
+                {% else %}
+                <li><span></span></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

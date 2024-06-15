@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phone Number Management</title>
+<style>
+  /* Add some basic styling */
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+  }
+  #phone-list {
+    list-style-type: none;
+    padding: 0;
+  }
+  .phone-item {
+    margin-bottom: 5px;
+  }
+</style>
+</head>
+<body>
+<h1>Phone Number Management</h1>
+<form id="phone-form">
+  <input type="text" id="phone-input" placeholder="Enter phone number">
+  <button type="button" id="add-button">Add</button>
+</form>
+<ul id="phone-list"></ul>
+
+<script>
+  const phoneForm = document.getElementById('phone-form');
+  const phoneInput = document.getElementById('phone-input');
+  const addButton = document.getElementById('add-button');
+  const phoneList = document.getElementById('phone-list');
+
+  addButton.addEventListener('click', () => {
+    const phoneNumber = phoneInput.value.trim();
+    if (phoneNumber !== '') {
+      addPhoneNumber(phoneNumber);
+      phoneInput.value = '';
+    }
+  });
+
+  function addPhoneNumber(phoneNumber) {
+    const listItem = document.createElement('li');
+    listItem.className = 'phone-item';
+    listItem.textContent = phoneNumber;
+    
+    const removeButton = document.createElement('button');
+    removeButton.textContent = 'Remove';
+    removeButton.addEventListener('click', () => {
+      phoneList.removeChild(listItem);
+    });
+    
+    listItem.appendChild(removeButton);
+    phoneList.appendChild(listItem);
+  }
+</script>
+</body>
+</html>

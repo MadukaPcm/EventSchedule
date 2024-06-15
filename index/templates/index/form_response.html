@@ -1,0 +1,156 @@
+{% extends 'index/layout.html' %}
+{% load static %}
+{% block script %}
+<script src="{% static 'index/viewform.js' %}" defer></script>
+<script src="{% static 'lib/cookie.min.js' %}"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAro40_z2tGtXFU4RZM4c2-DJd4Xf_6zIg&libraries=places&callback=initMap" async defer></script>
+<script>
+    function initMap() {
+        var input = document.getElementById('searchTextField');
+        var autocomplete = new google.maps.places.Autocomplete(input);
+
+        autocomplete.addListener('place_changed', function() {
+            var place = autocomplete.getPlace();
+            if (!place.geometry) {
+                return;
+            }
+
+            // Get latitude and longitude
+            var lat = place.geometry.location.lat();
+            var lng = place.geometry.location.lng();
+            console.log(lat);
+            console.log(lng);
+
+            // Update hidden fields with coordinates
+            document.getElementById('HomeLat').value = lat;
+            document.getElementById('HomeLng').value = lng;
+        });
+    }
+
+
+    function saveHomeLocation() {
+        // Get form elements
+        const form = document.getElementById('myForm');
+        const homeLocationName = document.getElementById('searchTextField').value;
+        const homeLatitude = document.getElementById('HomeLat').value;
+        const homeLongitude = document.getElementById('HomeLng').value;
+        const homeResponseId = document.getElementById('responseId').value;
+      
+        // Basic validation (optional)
+        if (!homeLocationName || !homeLatitude || !homeLongitude) {
+          alert('Please fill in all required fields.');
+          return false; // Prevent form submission if validation fails
+        }
+      
+        // Submit the form using AJAX
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', form.action); // Use the form's action attribute
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      
+        xhr.onload = function() {
+            if (xhr.status === 200) { // Success
+              const response = JSON.parse(xhr.responseText);
+              console.log('Wazi' +response); // Log the response for verification
+              alert(response.message); // Display the alert message
+            } else {
+              alert('Error saving data: ' + xhr.statusText);
+            }
+          }; 
+      
+        // Build form data string
+        const formData = `home_location_name=${homeLocationName}&response_id=${homeResponseId}&home_latitude=${homeLatitude}&home_longtude=${homeLongitude}`;
+      
+        // Send AJAX request
+        xhr.send(formData);
+      
+        // Prevent default form submission behavior
+        return false;
+      }
+    
+</script>
+{% endblock %}
+{% block body %}
+
+<div class="container">
+    <div class="col margin-top-bottom box box-shadow bg-white">
+        <span id="bg-color" style="display: none;">{{form.background_color}}</span>
+        <span id="text-color" style="display: none;">{{form.text_color}}</span>
+        <div class="col margin-top-bottom box box-shadow bg-white">
+            <div class="col col-12 margin-top-bottom box box-shadow bg-white">
+                <h1 class="form-title txtClr">{{form.title}}</h1>
+                <p class="text-label margin-left-right" style="margin-left: 10px;">{{form.confirmation_message}}</p>
+
+                <!-- Merged Content Starts Here -->
+            <div class="row col-12 margin-top-bottom box box-shadow">
+                <div class="col col-6">
+                    <div class="margin-top-bottom box question-box" id="show-location">
+                        <p class="txtClr">Event Location</p>
+                        <ul>
+                            {% if event_location.event_latitude %}
+                            <li><span>{{ event_location.event_location_name }}</span></li>
+                            {% else %}
+                            <li><span>Event location not updated !!</span></li>
+                            {% endif %}
+                        </ul>
+                        <p class="txtClr">Google map-link from home area to event </p>
+                        <ul>
+                            {% comment %} {% if home_location %}
+                            <li><span>{{ home_location.event_location }}</span></li>
+                            {% else %} {% endcomment %}
+                            <li><span>Home location not updated !!</span></li>
+                            {% comment %} {% endif %} {% endcomment %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col col-6">
+                    <div class="margin-top-bottom box question-box" id="update-location">
+                        <p class="txtClr">Update your home location to event: {{response.id}}</p>
+                        <form method="post" action="{% url 'home_location' code=form.code %}" onsubmit="return saveHomeLocation()">
+                            {% csrf_token %}
+                            <input type="text" id="searchTextField" name="home_location_name" placeholder="Search & save home location area." required>
+                            <input type="hidden" id="responseId" name="response_id" value="{{ response.id }}">
+                            <input type="hidden" id="HomeLat" name="home_latitude"> 
+                            <input type="hidden" id="HomeLng" name="home_longtude">
+                            <button class="btn-submit" type="submit">save</button>
+                        </form>
+                        <p class="txtClr">My home location to event</p>
+                        <ul>
+                            {% if home_location %} 
+                            <li><span>{{ home_location.home_location_name }}</span></li>
+                            {% else %}
+                            <li><span>Location not updated !!</span></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row col-12 margin-top-bottom box box-shadow">
+                <div class="col col-6">
+                    {% if form.edit_after_submit %}
+                    <a href="{% url 'edit_response' form.code code %}" class="edit-response-link">Edit response</a>
+                    {% endif %}
+                    <div class="modal-division">
+                        {% if form.is_quiz and form.allow_view_score %}
+                        <a href="{% url 'response' form.code code %}" class="btn view-score-btn">View Score</a>
+                        {% endif %}
+                    </br></br></br>
+                        <a href="{{ qr_code_download_path }}" download="qr_code.png" class="btn btn-primary">Download QR Code</a>
+                    </div>
+                   
+                </div>
+                <div class="col col-6" style="display: flex; align-items: center; justify-content: center;">
+  
+                       <img id="qr-code-image" src="{{ qr_code_path }}" alt="QR Code" style="width:15rem">
+                    </br></br></br></br></br></br></br></br></br>
+                    {% comment %} <div class="margin-top-4">Update home location to download qr-code</div> {% endcomment %}
+                </div>
+            </div>
+            <!-- Merged Content Ends Here -->
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+{% endblock %}

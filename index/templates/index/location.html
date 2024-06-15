@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Registration</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAro40_z2tGtXFU4RZM4c2-DJd4Xf_6zIg
+    &libraries=places"></script>
+    <script>
+        function initMap() {
+            var input = document.getElementById('searchTextField');
+            var autocomplete = new google.maps.places.Autocomplete(input);
+
+            autocomplete.addListener('place_changed', function() {
+                var place = autocomplete.getPlace();
+                if (!place.geometry) {
+                    return;
+                }
+
+                // Get latitude and longitude
+                var lat = place.geometry.location.lat();
+                var lng = place.geometry.location.lng();
+                console.log(lat);
+                console.log(lng)
+
+                // Update hidden fields with coordinates
+                document.getElementById('cityLat').value = lat;
+                document.getElementById('cityLng').value = lng;
+            });
+        }
+    </script>
+</head>
+<body onload="initMap()">
+    <h1>Event Registration</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="event_area">Event Area:</label>
+        <input type="text" id="searchTextField" name="event_area" placeholder="Enter event location" required>
+        <input type="hidden" id="cityLat" name="event_lat">
+        <input type="hidden" id="cityLng" name="event_lng">
+        <br>
+        <label for="attendee_location">Your Location:</label>
+        <input type="text" id="attendee_location" name="attendee_location" placeholder="Enter your starting location">
+        <br>
+        <button type="submit">Register</button>
+    </form>
+</body>
+</html>

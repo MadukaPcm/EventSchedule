@@ -1,0 +1,99 @@
+{% extends 'index/layout.html' %}
+{% load static %}
+{% block script %}
+<script src = "{% static 'index/index.js' %}" defer></script>
+<script src="{% static 'lib/cookie.min.js' %}" defer></script>
+{% endblock %}
+{% load static %}
+{% block body %}
+<div class="container-fluid">
+    <div class="topnav nav-effect">
+        <div class="nav-padding">
+            <span class="nav-ham" id="nav-ham">&#9776;</span>
+            <img src = "{% static 'Icon/icon.png' %}" alt = "Google Forms Icon(CLONE)" class="navbar-icon form-icon" title = "Forms">
+            <span class="nav-text" title = "Forms"><a href = "{% url 'index' %}" class="nav-link">Events Project</a></span>
+            {% comment %} <a href="{% url 'logout' %}">
+                <img src = "{% static 'Icon/Logout.jpg' %}" alt = "Logout Icon" class="navbar-icon float-right logout-icon" title = "Logout">
+            </a> {% endcomment %}
+        </div>
+    </div>
+    <ul class="event-list">
+        <li class"list-nav"><a href = "{% url 'index' %}">Home</a></li>
+        {% if admin %}
+        <li class"list-nav"><a href = "{% url 'dashboard' %}">Dashboard</a></li>
+        {% endif %}
+        <li class="dropdown">
+          <img src = "{% static 'Icon/user.png' %}" alt = "Logout Icon" class="navbar-icon logout-icon" title = "Logout">
+          <a href="javascript:void(0)" class="dropbtn">{{auth}}</a>
+          <div class="dropdown-content">
+
+            <a href="{% url 'logout' %}">Logout</a>
+            {% comment %} <a href="#">Link 2</a>
+            <a href="#">Link 3</a> {% endcomment %}
+          </div>
+        </li>
+      </ul>
+    <div class="sidebar" id = "sidebar">
+        <span class="close-sidebar" id="close-sidebar">&times;</span>
+        <div class="sidebar-content">
+            <h4 class="sidebar-title">
+                <a href = "{% url 'index' %}" class="sidebar-title-link">
+                    <span>Events Project</span>
+                </a>
+            </h4>
+            <p class="text-label">This is the final Year Project </p>
+            {% comment %} <p class="text-label"> <a href="https://github.com/kimlimjustin/google-form-clone/blob/master/LICENSE" class="link">MIT</a></p>
+            <p class="text-label">Source code: <a href="https://github.com/kimlimjustin/google-form-clone">
+                <img src = "{% static 'Icon/github.png' %}" class="github-icon" alt="GitHub"></a></p>
+            <p class="text-label">Support creator by <a href="https://github.com/kimlimjustin/google-form-clone" class="link">give a star on GitHub</a></p> {% endcomment %}
+        </div>
+    </div>
+    <div class="create-form">
+        <div class="container">
+            <h4 class="forms-label">Create Event</h4>
+            <div class="form-template-box">
+                <img src = "{% static 'Icon/blank-form.png' %}" alt = "Blank form" title = "Blank form" id="create-blank-form">
+                <span class="form-template-label">Blank Form</span>
+            </div>
+            {% comment %} <div class="form-template-box big-screen">
+                <img src = "{% static 'Template/contact_information.png' %}" alt = "Contact Information" title = "Contact Information" id="create-contact-form">
+                <span class="form-template-label">Contact Information</span>
+            </div>
+            <div class="form-template-box big-screen">
+                <img src = "{% static 'Template/customer_feedback.png' %}" alt = "Customer Feedback" title = "Customer Feedback" id="create-customer-feedback">
+                <span class="form-template-label">Customer Feedback</span>
+            </div> {% endcomment %}
+            <div class="form-template-box big-screen">
+                <img src = "{% static 'Template/customer_feedback.png' %}" alt = "Event Registration" title = "Event Registration" id="create-event-registration">
+                <span class="form-template-label">Event Registration</span>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="form-list">
+            <p class="forms-label">List of Events Created:</p>
+            {% for i in forms %}
+            <a href = "{% url 'edit_form' i.code %}" class="form-list-link">
+                {% comment %} <div class="form-box">
+                    <div class="form-list-title"><h5 class="form-list-title-text">{{i.title}}</h5></div>
+                    {% if i.createdAt == i.updatedAt %}
+                    <p class="form-list-timestamp">{{i.createdAt}}</p>
+                    {% else %}
+                    <p class="form-list-timestamp">{{i.updatedAt}}</p>
+                    {% endif %}
+                </div> {% endcomment %}
+                <div class="polaroid">
+                    <img src = "{% static 'Icon/cover.jpg' %}" alt="Norway" style="width:100%">
+                    <div class="form-list-title"><h5 class="form-list-title-text">{{i.title}}</h5></div>
+                    {% if i.createdAt == i.updatedAt %}
+                    <p class="form-list-timestamp">{{i.createdAt}}</p>
+                    {% else %}
+                    <p class="form-list-timestamp">{{i.updatedAt}}</p>
+                    {% endif %}
+                  </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

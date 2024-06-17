@@ -92,35 +92,35 @@
                             <li><span>Event location not updated !!</span></li>
                             {% endif %}
                         </ul>
-                        <p class="txtClr">Google map-link from home area to event </p>
-                        <ul>
+                        {% comment %} <p class="txtClr">Google map-link from home area to event </p> {% endcomment %}
+                        {% comment %} <ul> {% endcomment %}
                             {% comment %} {% if home_location %}
                             <li><span>{{ home_location.event_location }}</span></li>
                             {% else %} {% endcomment %}
-                            <li><span>Home location not updated !!</span></li>
+                            {% comment %} <li><span>Home location not updated !!</span></li> {% endcomment %}
                             {% comment %} {% endif %} {% endcomment %}
-                        </ul>
+                        {% comment %} </ul> {% endcomment %}
                     </div>
                 </div>
                 <div class="col col-6">
                     <div class="margin-top-bottom box question-box" id="update-location">
-                        <p class="txtClr">Update your home location to event: {{response.id}}</p>
-                        <form method="post" action="{% url 'home_location' code=form.code %}" onsubmit="return saveHomeLocation()">
+                        <p class="txtClr">Enter your home location to view map: {{response.id}}</p>
+                        <form method="post" action="{% url 'home_location' code=form.code %}">
                             {% csrf_token %}
                             <input type="text" id="searchTextField" name="home_location_name" placeholder="Search & save home location area." required>
                             <input type="hidden" id="responseId" name="response_id" value="{{ response.id }}">
                             <input type="hidden" id="HomeLat" name="home_latitude"> 
                             <input type="hidden" id="HomeLng" name="home_longtude">
-                            <button class="btn-submit" type="submit">save</button>
+                            <button class="btn-submit" type="submit">view map</button>
                         </form>
-                        <p class="txtClr">My home location to event</p>
-                        <ul>
+                        {% comment %} <p class="txtClr">My home location to event</p> {% endcomment %}
+                        {% comment %} <ul>
                             {% if home_location %} 
                             <li><span>{{ home_location.home_location_name }}</span></li>
                             {% else %}
                             <li><span>Location not updated !!</span></li>
                             {% endif %}
-                        </ul>
+                        </ul> {% endcomment %}
                     </div>
                 </div>
             </div>

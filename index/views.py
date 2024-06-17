@@ -16,6 +16,13 @@ from qrcode import QRCode
 import requests
 from requests.auth import HTTPBasicAuth
 from django.conf import settings
+import folium
+import geocoder
+from geopy.geocoders import ArcGIS,Nominatim
+from geopy.distance import geodesic
+import json
+from django.views.decorators.csrf import *
+
 # Create your views here.
 def index(request):
     if not request.user.is_authenticated:
@@ -573,45 +580,131 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
+
+# def submit_form(request, code):
+#     formInfo = Form.objects.filter(code = code)
+
+#     if formInfo.count() == 0:
+
+#         return HttpResponseRedirect(reverse('404'))
+#     else: formInfo = formInfo[0]
+#     if formInfo.authenticated_responder:
+#         if not request.user.is_authenticated:
+#             return HttpResponseRedirect(reverse("login"))
+#     if request.method == "POST":
+#         code = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(20))
+#         if formInfo.authenticated_responder:
+#             response = Responses(response_code = code, response_to = formInfo, responder_ip = get_client_ip(request), responder = request.user)
+#             response.save()
+#         else:
+#             if not formInfo.collect_email:
+#                 response = Responses(response_code = code, response_to = formInfo, responder_ip = get_client_ip(request))
+#                 response.save()
+#             else:
+#                 response = Responses(response_code = code, response_to = formInfo, responder_ip = get_client_ip(request), responder_email=request.POST["email-address"])
+#                 response.save()
+#         for i in request.POST:
+#             if i == "csrfmiddlewaretoken" or i == "email-address":
+#                 continue
+#             question = formInfo.questions.get(id = i)
+#             for j in request.POST.getlist(i):
+#                 answer = Answer(answer=j, answer_to = question)
+#                 answer.save()
+#                 response.response.add(answer)
+#                 response.save()
+#         qr_data = Responses.objects.filter(response_code = code).first() if code else None 
+#         event_location = EventLocation.objects.filter(event=qr_data.response_to).first() if qr_data.response_to else None 
+#         home_location = qr_data.event_form_response.first() if HomeLocation.objects.filter(response=qr_data).exists else None 
+        
+#         print("ShadyAI: ", event_location)
+#         print("Maduka ",home_location.home_location_name if home_location else "--")
+#         code_name = qr_data.response_code
+#         event_name = qr_data.response_to.title
+#         email = qr_data.responder_email
+
+#         data = f"Code Name: {code_name}\nEvent Name: {event_name}\nEmail: {email}"
+
+#         qr = qrcode.QRCode(version=3, box_size=20, border=10, error_correction=qrcode.constants.ERROR_CORRECT_H)
+
+ 
+#         qr.add_data(data)
+
+#         qr.make(fit=True)
+
+#         img = qr.make_image(fill_color="black", back_color="white")
+
+#         qr_code_path = os.path.join(settings.MEDIA_ROOT, f"{code_name}.png")
+#         img.save(qr_code_path)
+#         relative_qr_code_path = os.path.relpath(qr_code_path, settings.MEDIA_ROOT)
+#         qr_code_download_path = os.path.join(settings.MEDIA_URL, relative_qr_code_path)
+
+
+#         print("This are the data for the qr code", code_name,event_name,email)
+#         return render(
+#             request, 
+#             "index/form_response.html", {
+#             "form": formInfo,
+#             "code": code,
+#             "response":qr_data, 
+#             "event_location":event_location,
+#             "home_location":home_location,
+#             "qr_code_path": os.path.join(settings.MEDIA_URL, relative_qr_code_path) ,
+#             "qr_code_download_path": qr_code_download_path  # Pass the relative QR code download path
+#         })
+
+
 def submit_form(request, code):
-    formInfo = Form.objects.filter(code = code)
+    formInfo = Form.objects.filter(code=code)
 
-    #Checking if form exists
+    # Checking if form exists
     if formInfo.count() == 0:
-
         return HttpResponseRedirect(reverse('404'))
-    else: formInfo = formInfo[0]
+    else:
+        formInfo = formInfo[0]
+
     if formInfo.authenticated_responder:
         if not request.user.is_authenticated:
             return HttpResponseRedirect(reverse("login"))
+
     if request.method == "POST":
-        code = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(20))
+        email = request.POST.get("email-address", "")
         if formInfo.authenticated_responder:
-            response = Responses(response_code = code, response_to = formInfo, responder_ip = get_client_ip(request), responder = request.user)
-            response.save()
+            response = Responses.objects.filter(response_to=formInfo, responder=request.user).first()
+            if not response:
+                code = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(20))
+                response = Responses(response_code=code, response_to=formInfo, responder_ip=get_client_ip(request), responder=request.user)
+                response.save()
         else:
             if not formInfo.collect_email:
-                response = Responses(response_code = code, response_to = formInfo, responder_ip = get_client_ip(request))
-                response.save()
+                response = Responses.objects.filter(response_to=formInfo, responder_ip=get_client_ip(request)).first()
+                if not response:
+                    code = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(20))
+                    response = Responses(response_code=code, response_to=formInfo, responder_ip=get_client_ip(request))
+                    response.save()
             else:
-                response = Responses(response_code = code, response_to = formInfo, responder_ip = get_client_ip(request), responder_email=request.POST["email-address"])
-                response.save()
+                response = Responses.objects.filter(response_to=formInfo, responder_email=email).first()
+                if not response:
+                    code = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(20))
+                    response = Responses(response_code=code, response_to=formInfo, responder_ip=get_client_ip(request), responder_email=email)
+                    response.save()
+
         for i in request.POST:
-            #Excluding csrf token
+            # Excluding csrf token and email address
             if i == "csrfmiddlewaretoken" or i == "email-address":
                 continue
-            question = formInfo.questions.get(id = i)
+            question = formInfo.questions.get(id=i)
             for j in request.POST.getlist(i):
-                answer = Answer(answer=j, answer_to = question)
+                answer = Answer(answer=j, answer_to=question)
                 answer.save()
                 response.response.add(answer)
                 response.save()
-        qr_data = Responses.objects.filter(response_code = code).first() if code else None 
+
+        qr_data = Responses.objects.filter(response_code=response.response_code).first() if response else None 
         event_location = EventLocation.objects.filter(event=qr_data.response_to).first() if qr_data.response_to else None 
         home_location = qr_data.event_form_response.first() if HomeLocation.objects.filter(response=qr_data).exists else None 
-        
+
         print("ShadyAI: ", event_location)
-        print("Maduka ",home_location.home_location_name if home_location else "--")
+        print("Maduka ", home_location.home_location_name if home_location else "--")
         code_name = qr_data.response_code
         event_name = qr_data.response_to.title
         email = qr_data.responder_email
@@ -619,9 +712,6 @@ def submit_form(request, code):
         data = f"Code Name: {code_name}\nEvent Name: {event_name}\nEmail: {email}"
 
         qr = qrcode.QRCode(version=3, box_size=20, border=10, error_correction=qrcode.constants.ERROR_CORRECT_H)
-
-        # Define the data to be encoded in the QR code
-        # data = "https://medium.com/@rahulmallah785671/create-qr-code-by-using-python-2370d7bd9b8d"
 
         # Add the data to the QR code object
         qr.add_data(data)
@@ -638,20 +728,19 @@ def submit_form(request, code):
         relative_qr_code_path = os.path.relpath(qr_code_path, settings.MEDIA_ROOT)
         qr_code_download_path = os.path.join(settings.MEDIA_URL, relative_qr_code_path)
 
-        # img.save("qr_code.png")
-
-        print("This are the data for the qr code", code_name,event_name,email)
+        print("This are the data for the qr code", code_name, event_name, email)
         return render(
             request, 
             "index/form_response.html", {
             "form": formInfo,
-            "code": code,
-            "response":qr_data, 
-            "event_location":event_location,
-            "home_location":home_location,
-            "qr_code_path": os.path.join(settings.MEDIA_URL, relative_qr_code_path) ,
-            "qr_code_download_path": qr_code_download_path  # Pass the relative QR code download path
+            "code": code_name,
+            "response": qr_data, 
+            "event_location": event_location,
+            "home_location": home_location,
+            "qr_code_path": os.path.join(settings.MEDIA_URL, relative_qr_code_path),
+            "qr_code_download_path": qr_code_download_path
         })
+
 
 def responses(request, code):
     if not request.user.is_authenticated:
@@ -742,7 +831,6 @@ def event_location(request, code):
         "message":message.message
     })
 
-from django.http import JsonResponse
 
 def home_location(request, code):
     print("Code ", code)
@@ -750,6 +838,7 @@ def home_location(request, code):
     if not formInfo:
         return JsonResponse({'error': 'Form not found'}, status=404)
 
+    m = None
     if request.method == "POST":
         home_location_name = request.POST.get('home_location_name')
         response_id = request.POST.get('response_id')
@@ -776,21 +865,69 @@ def home_location(request, code):
             if not created:
                 home_location.home_location_name = home_location_name
                 home_location.home_latitude = home_latitude
-                home_location.home_longtude = home_longtude      
+                home_location.home_longtude = home_longtude
                 home_location.save()
 
-            if created:
-                return JsonResponse({'message': 'Data saved successfully!'})
-            else:
-                return JsonResponse({'message': 'Data updated successfully!'})
+            # Viewing map ----------------------------
+            response = Responses.objects.filter(id=response_id).first()
+            geolocator = Nominatim(user_agent="my-app")  # Create a geolocator
             
-        else:
-        # Handle non-POST requests (optional)
-            return JsonResponse({'error': 'Invalid request method'})
-    else:
-        # Handle non-POST requests (optional)
-        return JsonResponse({'error': 'Invalid request method'})
+            origin_position = response.response_to.event_form.first()
+            current_location = HomeLocation.objects.filter(response=response).first()
+            
+            if origin_position and current_location:
+                origin_coords = (float(origin_position.event_latitude), float(origin_position.event_longtude))
+                current_coords = (float(current_location.home_latitude), float(current_location.home_longtude))
+                
+                print("origin_position", origin_coords)
+                print("current_location", current_coords)
 
+                origin = geolocator.reverse(origin_coords, exactly_one=True)
+                current = geolocator.reverse(current_coords, exactly_one=True)
+                
+                distance = geodesic(current_coords, origin_coords).meters
+                distance_str = f"{distance:.2f} m"  # Default distance string
+
+                if distance >= 1000:
+                    distance_km = distance / 1000
+                    distance_str = f"{distance_km:.2f} km"
+                
+                if distance > 5:
+                    m = folium.Map(location=origin_coords, zoom_start=7)
+                    
+                    folium.Marker(
+                        location=current_coords, 
+                        popup=f"<b><i><u>Home Location:</u></i></b> {current.address} <br><br> <b><i><u>Distance:</u></i></b>: {distance_str}",
+                        icon=folium.Icon(color='green')
+                    ).add_to(m)
+                    folium.Marker(
+                        location=origin_coords, 
+                        popup=f"<b><i><u>Event Location:</u></i></b> {origin.address} <br><br> <b><i><u>Distance:</u></i></b>: {distance_str}",
+                        icon=folium.Icon(color='blue')
+                    ).add_to(m)
+                    folium.PolyLine(
+                        locations=[current_coords, origin_coords],
+                        color='green',
+                        weight=3,
+                        tooltip=f"<i>Distance</i>: <b>{distance_str}</b> m"
+                    ).add_to(m)
+                    
+                    print("Noma", m)
+                    m = m._repr_html_()
+                    
+                else:
+                    m = folium.Map(location=origin_coords, zoom_start=12)
+                    folium.Marker(
+                        location=origin_coords, 
+                        popup=f"<b><i><u>Origin Location:</u></i></b> {origin.address}",
+                        icon=folium.Icon(color='blue')
+                    ).add_to(m)
+                    print("Noma ",m)
+                    m = m._repr_html_()
+            # End of map codes ........................
+
+    context = {"m": m}
+    return render(request, "index/map.html", context)
     
     
 def phone(request, code):
